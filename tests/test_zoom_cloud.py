@@ -5,7 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 
 import httpx
@@ -126,11 +126,30 @@ def test_windows_and_paging(meeting):
         m['uuid']=p['from']+p['next_page_token']
         return httpx.Response(200,json={'meetings':[m],'next_page_token':'page2' if not p['next_page_token'] else ''})
     result=client_for(handler).inventory('90d',now=NOW)
-    assert len(calls)==8 and len(result)==8
     spans=list(z.windows('90d',now=NOW))
-    assert all((datetime.fromisoformat(b)-datetime.fromisoformat(a)).days<=29 for a,b in spans)
+    assert len(calls)==2*len(spans) and len(result)==2*len(spans)
+    assert all((datetime.fromisoformat(b)-datetime.fromisoformat(a)).days<=z.WINDOW_DAYS-1 for a,b in spans)
     assert spans[-1][0]=='2026-06-08'
     assert all(p['page_size']=='300' for p in calls)
+
+
+def test_windows_overlap_so_no_day_falls_between_them():
+    # Zoom clamps `from` forward near its one-month limit; adjacent 30-day windows lost 10 Feb 2026 (07 Sep 2026).
+    spans=list(z.windows('400d',now=NOW))
+    dates=[(datetime.fromisoformat(a).date(),datetime.fromisoformat(b).date()) for a,b in spans]
+    assert dates[0][1]==NOW.date()
+    assert all(prev_start==cur_end for (prev_start,_),(_,cur_end) in zip(dates,dates[1:]))
+    assert all((b-a).days<=z.WINDOW_DAYS-1 for a,b in dates)
+    assert dates[-1][0]==z.parse_window('400d',now=NOW).date()
+
+
+def test_inventory_refuses_clamped_window(meeting):
+    def handler(req):
+        if req.url.path=='/oauth/token': return httpx.Response(200,json={'access_token':'fixture-token'})
+        p=dict(req.url.params); nxt=(datetime.fromisoformat(p['from'])+timedelta(days=1)).date().isoformat()
+        return httpx.Response(200,json={'from':nxt,'to':p['to'],'meetings':[copy.deepcopy(meeting)],'next_page_token':''})
+    with pytest.raises(z.CollectorError, match='clamped the listing window'):
+        client_for(handler).inventory('30d',now=NOW)
 
 
 def test_idempotent_inventory_and_exact_topic(tmp_path,meeting):

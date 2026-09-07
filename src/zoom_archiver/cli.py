@@ -100,6 +100,13 @@ def load_keys(lookup=None):
     return tuple(values)
 
 
+# Zoom silently moves `from` forward when a listing span reaches its "one month"
+# clamp (from=2026-02-10&to=2026-03-11 is echoed back as from=2026-02-11), so
+# adjacent 30-day windows can skip a whole day. Keep spans short and overlapping
+# by one day; inventory() dedupes meetings by uuid.
+WINDOW_DAYS = 14
+
+
 def windows(since='90d', *, now=None):
     clock = now or datetime.now(timezone.utc)
     cutoff = parse_window(since, now=clock)
@@ -107,9 +114,11 @@ def windows(since='90d', *, now=None):
         raise CollectorError('invalid since window')
     end = clock.date()
     while end >= cutoff.date():
-        start = max(cutoff.date(), end - timedelta(days=29))
+        start = max(cutoff.date(), end - timedelta(days=WINDOW_DAYS - 1))
         yield start.isoformat(), end.isoformat()
-        end = start - timedelta(days=1)
+        if start <= cutoff.date():
+            break
+        end = start
 
 
 def meeting_key(value):
@@ -168,6 +177,9 @@ class ZoomClient:
             while True:
                 response = self.request('GET', '/users/' + quote(self.user_id, safe='') + '/recordings', params={'from': start, 'to': end, 'page_size': 300, 'next_page_token': page})
                 data = response.json()
+                echoed = (str(data.get('from') or start), str(data.get('to') or end))
+                if echoed != (start, end):
+                    raise CollectorError(f'Zoom clamped the listing window: asked {start}..{end}, served {echoed[0]}..{echoed[1]}')
                 for meeting in data.get('meetings', []):
                     seen[str(meeting['uuid'])] = meeting
                 page = data.get('next_page_token', '')
