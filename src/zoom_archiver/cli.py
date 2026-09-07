@@ -271,12 +271,89 @@ def merge_preserving(old, new):
     return new
 
 
-def update_manifest(path, *, meeting=None, file=None, **updates):
+def _replace_catalog_bytes(raw, patch):
+    """Replace specified catalog fields without reserializing any other member.
+
+    Decode member boundaries with the JSON parser (strings may contain braces).
+    Unknown catalog fields survive; supplied lists replace, including empty lists.
+    """
+    allowed = {'custom_title', 'world', 'people', 'tags', 'notes', 'updated_at'}
+    if not isinstance(patch, dict) or set(patch) - allowed:
+        raise CollectorError('invalid catalog replacement fields')
+    data = json.loads(raw)
+    if not isinstance(data, dict) or not isinstance(data.get('catalog', {}), dict):
+        raise CollectorError('manifest and catalog must be objects')
+    decoder = json.JSONDecoder()
+    pos = len(raw) - len(raw.lstrip())
+    if raw[pos:pos + 1] != '{':
+        raise CollectorError('manifest must be an object')
+    pos += 1
+    members, catalog_span = [], None
+    while True:
+        while pos < len(raw) and raw[pos].isspace():
+            pos += 1
+        if raw[pos:pos + 1] == '}':
+            closing = pos
+            break
+        key, end = decoder.raw_decode(raw, pos)
+        if not isinstance(key, str) or key in members:
+            raise CollectorError('duplicate or invalid manifest member')
+        members.append(key)
+        pos = end
+        while raw[pos].isspace():
+            pos += 1
+        if raw[pos] != ':':
+            raise CollectorError('invalid manifest member')
+        pos += 1
+        while raw[pos].isspace():
+            pos += 1
+        start = pos
+        _, pos = decoder.raw_decode(raw, pos)
+        if key == 'catalog':
+            catalog_span = (start, pos)
+        while raw[pos].isspace():
+            pos += 1
+        if raw[pos] == ',':
+            pos += 1
+        elif raw[pos] != '}':
+            raise CollectorError('invalid manifest separator')
+    replacement = {**data.get('catalog', {}), **patch}
+    encoded = json.dumps(replacement, ensure_ascii=False, indent=2)
+    data['catalog'] = replacement
+    if catalog_span:
+        start, end = catalog_span
+        return raw[:start] + encoded + raw[end:], data
+    insertion_at = closing
+    while insertion_at > 0 and raw[insertion_at - 1].isspace():
+        insertion_at -= 1
+    insertion = (',' if members else '') + '\n  "catalog": ' + encoded
+    return raw[:insertion_at] + insertion + raw[insertion_at:], data
+
+
+def update_manifest(path, *, meeting=None, file=None, catalog_replace=None, **updates):
+    """Merge archive metadata, or atomically replace specified catalog fields.
+
+    catalog_replace is exclusive of other updates and preserves the raw bytes of
+    every non-catalog member. The default append-preserving behavior is unchanged.
+    """
+    if catalog_replace is not None and (meeting is not None or file is not None or updates):
+        raise CollectorError('catalog replacement cannot be combined with other updates')
     path = Path(path)
     if any(p.is_symlink() for p in (path, path.with_name(path.name + '.lock'), path.with_name(path.name + '.part'), *path.parents)):
         raise CollectorError('symlink in manifest path')
     path.parent.mkdir(parents=True, exist_ok=True)
     with file_lock(path.with_name(path.name + '.lock')):
+        if catalog_replace is not None:
+            if not path.is_file():
+                raise CollectorError('catalog replacement requires an existing manifest')
+            raw, data = _replace_catalog_bytes(path.read_bytes().decode('utf-8'), catalog_replace)
+            temporary = path.with_name(path.name + '.part')
+            with temporary.open('wb') as handle:
+                handle.write(raw.encode('utf-8'))
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary, path)
+            return data
         data = json.loads(path.read_text()) if path.exists() else {'meeting': {}, 'files': [], 'transcripts': {}, 'mail': {}, 'safe_to_trash': False, 'notes': []}
         # Keep previous snapshots of changed entries, including unknown fields.
         if meeting:
