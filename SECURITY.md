@@ -2,8 +2,9 @@
 
 ## Report a vulnerability privately
 
-Open this repository on GitHub, select **Security → Advisories → Report a
-vulnerability**, and submit a private report. Use that private advisory for
+Use [GitHub's private vulnerability report form](https://github.com/calmmage/zoom-archiver/security/advisories/new),
+or select **Security → Advisories → Report a vulnerability** in this repository.
+Use that private advisory for
 follow-up details and coordinated disclosure; do not describe an unpatched
 vulnerability in a public issue or pull request.
 

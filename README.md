@@ -1,31 +1,53 @@
-# Zoom Archiver
+<h1 align="center">
+  <img src="docs/examples/logo.png" alt="Zoom Archiver" width="64" valign="middle" /> Zoom Archiver
+</h1>
 
-Archive Zoom cloud recordings into ordinary folders, resume interrupted downloads, verify every file by size and SHA-256, and mirror verified files to another disk or synced folder.
+<p align="center">
+  <strong>Archive Zoom cloud recordings into ordinary folders.</strong><br/>
+  Resume interrupted downloads, verify every file by size and SHA-256, and mirror verified files to another disk or synced folder.<br/>
+  <small>Includes an inventory ledger and a compatible <code>manifest.json</code> per meeting. No service or scheduler is installed.</small>
+</p>
 
-Includes an inventory ledger and a compatible `manifest.json` per meeting. No service or scheduler is installed.
+<p align="center">
+  <a href="https://github.com/calmmage/zoom-archiver"><img src="https://img.shields.io/github/stars/calmmage/zoom-archiver?style=flat&amp;label=%E2%98%85&amp;color=08C" alt="GitHub stars" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-08C?style=flat" alt="License: MIT" /></a>
+  <img src="https://img.shields.io/badge/python-3.11%2B-3776AB?style=flat" alt="Python 3.11+" />
+  <img src="https://img.shields.io/badge/uv-sync-DE5FE9?style=flat" alt="uv" />
+</p>
 
-[Install](#install) · [Zoom setup](#server-to-server-oauth-setup) · [Commands](#commands) · [File guarantees](#download-and-manifest-guarantees) · [Folder layout](#folder-layout-and-manifest-fields) · [Mirror](#mirror)
+<h3 align="center"><a href="#install"><ins>Install Zoom Archiver</ins></a></h3>
+
+<p align="center">
+  <a href="docs/examples/hero.png"><img src="docs/examples/hero.png" alt="Zoom Archiver CLI help showing inventory, download, verify, safe-to-trash, trash, and mirror" width="960" /></a>
+</p>
+
+<p align="center">
+  <a href="#install">Install</a>
+  ·
+  <a href="#server-to-server-oauth-setup">Zoom setup</a>
+  ·
+  <a href="#commands">Commands</a>
+  ·
+  <a href="#download-and-manifest-guarantees">File guarantees</a>
+  ·
+  <a href="#folder-layout-and-manifest-fields">Folder layout</a>
+  ·
+  <a href="#mirror">Mirror</a>
+</p>
 
 ## Install
 
-Requires Python 3.11 or newer and [uv](https://docs.astral.sh/uv/getting-started/installation/). On this repository's GitHub page, choose **Code**, copy the clone URL, and run `git clone` with that URL. Then enter the cloned directory and install:
+Needs **Git**, **Python ≥ 3.11**, **[uv](https://docs.astral.sh/uv/getting-started/installation/)**, and **make**.
 
-```sh
+```bash
+git clone https://github.com/calmmage/zoom-archiver.git
 cd zoom-archiver
-uv sync
-uv run zoom-archiver --help
-
-# Offline fixture tests; no Zoom credentials or recordings required.
-uv run pytest -q
+make setup                 # uv sync + doctor (CLI help and offline fixtures)
 ```
 
-Runtime dependencies are `httpx` and `typer`; `pytest` is for development. Installation and help need no Zoom credentials.
+Equivalent: `uv sync` then `uv run zoom-archiver --help` and `uv run pytest -q`. Runtime dependencies are `httpx` and `typer`; `pytest` is for development. Installation and help need no Zoom credentials.
 
-Agents: read [AGENTS.md](AGENTS.md) before making changes. For vulnerability reports, see [SECURITY.md](SECURITY.md).
-
-![Zoom Archiver CLI help showing inventory, download, verify, safe-to-trash, trash, and mirror](.github/social-preview.png)
-
-Actual CLI help captured without credentials.
+**Agents:** follow **[AGENTS.md](AGENTS.md)** before making changes. Vulnerabilities: [SECURITY.md](SECURITY.md).
 
 ## Server-to-Server OAuth setup
 

@@ -1,10 +1,12 @@
 # Social preview
 
 `social-preview.png` is a 1280 × 640 screenshot of actual `zoom-archiver --help`
-output rendered in a terminal, with a title and product summary. It contains no
+output with the pixel-art logo. Same image: `docs/examples/hero.png`. It contains no
 credentials, account data, archive paths, or example download results.
 
 Keeping the file in this directory does not configure GitHub's social preview.
+GitHub's documented repository-update API has no social-preview upload field;
+the image must be uploaded through the repository settings.
 In the repository's **Settings → General → Social preview**, choose **Edit →
 Upload an image** and select `social-preview.png`.
 
