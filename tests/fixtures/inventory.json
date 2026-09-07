@@ -1,0 +1,26 @@
+{
+  "meetings": [
+    {
+      "uuid": "synthetic-uuid==",
+      "id": 123456789,
+      "topic": " Точный текст «как есть» / API ",
+      "start_time": "2026-09-05T15:30:00Z",
+      "duration": 1,
+      "total_size": 14,
+      "host_email": "fixture@example.invalid",
+      "recording_files": [
+        {
+          "id": "synthetic-file",
+          "file_name": "original.mp4",
+          "file_type": "MP4",
+          "file_size": 14,
+          "download_url": "https://example.zoom.us/rec/download/synthetic-file",
+          "recording_start": "2026-09-05T15:30:00Z",
+          "recording_end": "2026-09-05T15:31:00Z",
+          "status": "completed"
+        }
+      ]
+    }
+  ],
+  "next_page_token": ""
+}

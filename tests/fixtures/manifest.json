@@ -1,0 +1,45 @@
+{
+  "meeting": {
+    "uuid": "fixture-meeting==",
+    "id": 456789012,
+    "topic": "Synthetic planning call",
+    "start_time": "2026-09-05T15:30:00Z",
+    "duration_min": 1,
+    "host_email": "fixture@example.invalid",
+    "source": "zoom-cloud"
+  },
+  "files": [
+    {
+      "name": "original.mp4",
+      "file_type": "MP4",
+      "file_size": 14,
+      "sha256": "b4415e42198a635b8d818fbf4efd50505fc7d5fb2c3253e164187a0c0c440a4b",
+      "status": "verified",
+      "zoom_status": "completed",
+      "downloaded_at": "2026-09-05T15:32:00+00:00",
+      "verified_at": "2026-09-05T15:33:00+00:00",
+      "zoom_file_id": "fixture-file",
+      "download_route": "zoom-s2s-api"
+    }
+  ],
+  "transcripts": {
+    "companion": {
+      "path": "transcripts/example.json",
+      "unknown_field": "preserved"
+    }
+  },
+  "mail": {
+    "id": "fixture-mail"
+  },
+  "safe_to_trash": false,
+  "notes": [
+    "Original note"
+  ],
+  "file_history": [
+    {
+      "zoom_file_id": "fixture-file",
+      "status": "queued",
+      "sha256": null
+    }
+  ]
+}
