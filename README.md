@@ -86,7 +86,7 @@ uv run zoom-archiver safe-to-trash --download
 
 For inventory, download, verify and safe-to-trash, **archive writes require `--download` and the absence of `--dry-run`**. Despite its name, `verify --download` only updates verification metadata. Verify and safe-to-trash run locally without credentials; inventory and download previews still read Zoom. `--root PATH` overrides the root on each command. Exit 0 means success; incomplete verification/downloads and refusals exit 1.
 
-Inventory defaults to every meeting in 90 days; `--limit 0` means unbounded inventory. Download defaults to the newest five meetings and requires a positive limit. Windows cover at most 30 inclusive calendar dates with no gaps; pagination is followed before the newest meetings are selected. `--since` accepts an ISO timestamp or durations such as `7d`, `12h`, `2w`.
+Inventory defaults to every meeting in 90 days; `--limit 0` means unbounded inventory. Download defaults to the newest five meetings and requires a positive limit. Windows cover at most 14 inclusive calendar dates and overlap by one day; meetings are deduplicated by UUID. A response that echoes a different date range is refused so a silently shortened window cannot hide recordings. Pagination is followed before the newest meetings are selected. `--since` accepts an ISO timestamp or durations such as `7d`, `12h`, `2w`.
 
 ### Manual trash
 
