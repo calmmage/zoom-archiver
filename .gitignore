@@ -8,3 +8,13 @@ build/
 .env
 .env.*
 .DS_Store
+
+# Local archive roots used in the README contain private recordings and metadata.
+/recordings/
+/recordings-copy/
+
+# Inventory ledgers contain meeting metadata and signed download URLs.
+inventory.sqlite
+inventory.sqlite-wal
+inventory.sqlite-shm
+inventory.sqlite-journal

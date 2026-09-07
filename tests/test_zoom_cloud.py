@@ -112,7 +112,7 @@ def test_missing_keys(missing):
 
 
 def test_resolver_errors_not_missing():
-    def broken(_): raise RuntimeError('Keychain -50')
+    def broken(_): raise RuntimeError('credential resolver unavailable')
     with pytest.raises(z.AuthError,match='auth_state=unknown'):
         z.load_keys(broken)
 

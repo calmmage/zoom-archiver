@@ -1,0 +1,35 @@
+name: Bug report
+description: Report a reproducible problem with the CLI or archive handling.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For security vulnerabilities, use the repository Security tab to report privately; see SECURITY.md.
+        Use synthetic examples. Remove credentials, signed URLs, account or meeting identifiers, recording contents, and personal paths. Do not attach an archive or its inventory database.
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Project version or commit, Python version, and operating system.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include the command and a minimal example using synthetic data.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the exit code and sanitized output, if available.
+    validations:
+      required: true

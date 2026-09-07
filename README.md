@@ -1,18 +1,31 @@
 # Zoom Archiver
 
-Archive Zoom cloud recordings into ordinary folders, resume interrupted downloads, verify every file by size and SHA-256, and mirror verified files to another disk or synced folder. Includes an inventory ledger and a compatible `manifest.json` per meeting. No service or scheduler is installed.
+Archive Zoom cloud recordings into ordinary folders, resume interrupted downloads, verify every file by size and SHA-256, and mirror verified files to another disk or synced folder.
+
+Includes an inventory ledger and a compatible `manifest.json` per meeting. No service or scheduler is installed.
+
+[Install](#install) · [Zoom setup](#server-to-server-oauth-setup) · [Commands](#commands) · [File guarantees](#download-and-manifest-guarantees) · [Folder layout](#folder-layout-and-manifest-fields) · [Mirror](#mirror)
 
 ## Install
 
-Requires Python 3.11 or newer and [uv](https://docs.astral.sh/uv/getting-started/installation/). In your clone of this repository:
+Requires Python 3.11 or newer and [uv](https://docs.astral.sh/uv/getting-started/installation/). On this repository's GitHub page, choose **Code**, copy the clone URL, and run `git clone` with that URL. Then enter the cloned directory and install:
 
 ```sh
+cd zoom-archiver
 uv sync
 uv run zoom-archiver --help
+
+# Offline fixture tests; no Zoom credentials or recordings required.
 uv run pytest -q
 ```
 
 Runtime dependencies are `httpx` and `typer`; `pytest` is for development. Installation and help need no Zoom credentials.
+
+Agents: read [AGENTS.md](AGENTS.md) before making changes. For vulnerability reports, see [SECURITY.md](SECURITY.md).
+
+![Zoom Archiver CLI help showing inventory, download, verify, safe-to-trash, trash, and mirror](.github/social-preview.png)
+
+Actual CLI help captured without credentials.
 
 ## Server-to-Server OAuth setup
 
@@ -27,7 +40,7 @@ Runtime dependencies are `httpx` and `typer`; `pytest` is for development. Insta
    | `cloud_recording:read:recording:admin` | Recording event scope included in this setup |
    | `cloud_recording:delete:meeting_recording:admin` | Optional: explicit manual trash only |
 
-   See Zoom's [granular scope reference](https://developers.zoom.us/docs/integrations/oauth-scopes-granular/) and [recording event documentation](https://developers.zoom.us/docs/api/webhooks/).
+   See Zoom's [granular scope reference](https://developers.zoom.us/docs/integrations/oauth-scopes-granular/). The `cloud_recording:read:recording:admin` scope is for [recording event subscriptions](https://developers.zoom.us/docs/api/webhooks/); the setup retains it, although this tool polls the API and does not use webhook subscriptions.
 4. **Activation.** Activate the app and resolve any required-field errors. Zoom's [S2S OAuth guide](https://developers.zoom.us/docs/internal-apps/s2s-oauth/) describes the account-credentials token exchange; the tool handles tokens in memory.
 5. **Credentials.** Supply the three credential variables below through your environment or a resolver hook. Do not put secrets in command arguments, shell history, reports, or committed files. The tool does not read `.env` files or save credentials. Set `ZOOM_USER_ID` to the intended Zoom user ID or email; this tool refuses `me` for S2S inventory/download before sending HTTP requests.
 6. **Check.** Run the read-only inventory command below. Confirm the intended meetings before authorizing any archive writes.
@@ -98,8 +111,6 @@ The public default has **no transcript requirement**. To block eligibility and t
 - `manifest.json.lock` uses O_EXCL, re-read before update, and 30-second stale handling for proven-dead local owners. Active local owners are never stolen; foreign-host or malformed stale locks require inspection. Only owned/stale markers are cleaned up.
 - Manifest updates preserve unknown fields, transcripts, mail and notes. Changed meeting/file entries retain the preceding snapshot in `meeting_history` / `file_history`. JSON values preserve exact text; downloaded media/text file bytes are never reformatted.
 - `safe-to-trash.md` requires every inventoried file to remain verified after another hash pass, plus the optional marker gate when configured. It is an eligibility report, not a deletion receipt or a transcription-quality assessment.
-
-The general guarantees above preserve the original collector's wording, with storage references generalized, integration-specific diagnostics removed, and transcript eligibility replaced by the documented optional gate.
 
 ## Folder layout and manifest fields
 
